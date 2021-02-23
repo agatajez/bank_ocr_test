@@ -56,6 +56,7 @@ namespace BankOcrKata
   | _||_||_||_|  |  |  | _|", "490867715")]
         public void Tests(string input, string expectedResult)
         {
+            Assert.Fail("not implemented");
         }
     }
 }

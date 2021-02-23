@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework;
+using System.Linq;
 
 namespace BankOcrKata
 {
@@ -18,6 +19,12 @@ namespace BankOcrKata
   ||_  _|  | _||_|  ||_| _ ", "1234?678? ILL")]
         public void Tests(string input, string expectedResult)
         {
+            var accounts = AccountNumberReader.GetAccountNumbersFrom(input);
+
+            Assert.AreEqual(1, accounts.Count());
+
+            var account = accounts.First();
+            Assert.AreEqual(expectedResult, account.ToString());
         }
     }
 }

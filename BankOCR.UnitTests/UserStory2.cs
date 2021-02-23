@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework;
+using System.Linq;
 
 namespace BankOcrKata
 {
@@ -13,6 +14,8 @@ namespace BankOcrKata
         [TestCase("012345678", false)]
         public void Tests(string accountNumber, bool isValid)
         {
+            var account = new AccountNumber(accountNumber);
+            Assert.AreEqual(isValid, account.HasValidChecksum());
         }
     }
 }

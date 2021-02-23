@@ -54,7 +54,12 @@ namespace BankOcrKata
   ||_  _|  | _||_|  ||_| _|", "123456789")]
         public void Tests(string input, string expectedResult)
         {
+            var accounts = AccountNumberReader.GetAccountNumbersFrom(input);
 
+            Assert.AreEqual(1, accounts.Count());
+
+            var account = accounts.First();
+            Assert.AreEqual(expectedResult, account.ToString());
         }
     }
 }
