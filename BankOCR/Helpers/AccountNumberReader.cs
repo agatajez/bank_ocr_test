@@ -59,7 +59,6 @@ namespace BankOcrKata
                 if (index == digitHeight - 1)
                     digit.TrySetValue();
             }
-
         }
                 
     }

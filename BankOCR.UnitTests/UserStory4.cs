@@ -59,9 +59,9 @@ namespace BankOcrKata
         {
             var account = AccountNumberReader.GetAccountNumbersFrom(input).First();
 
-            if (account.Number.Any(x => x.DigitValue == null))
+            if (account.HasUnrecognisedDigits())
             {
-                var alternatives = account.GetAlternativeAccountNumbersForUnrecognised();
+                var alternatives = account.GetAlternativeNumbersForUnrecognised();
                 if (alternatives.Any())
                 {
                     account.Number = alternatives[0].Number; //override invalid account number

@@ -36,8 +36,7 @@ namespace BankOcrKata
                 }
                 else
                 {
-                    var numbers = new List<string>();
-                    AlternativeNumbers.ForEach(x => numbers.Add($"'{x}'"));
+                    var numbers = AlternativeNumbers.Select(x => $"'{x}'").ToList();
                     builder.Append($" AMB [{string.Join(", ", numbers.OrderBy(x => x))}]");
                 }
             }
@@ -47,16 +46,28 @@ namespace BankOcrKata
             return builder.ToString();
         }
 
+        public override bool Equals(object obj)
+        {
+            if (obj == null || !GetType().Equals(obj.GetType()))
+                return false;
+
+            var other = (AccountNumber)obj;
+            return ToString() == other.ToString();
+        }
+
         public bool HasValidChecksum()
         {
-            if (Number.Any(x => x.DigitValue == null) || !Number.All(x => x.DigitValue >= 0 && x.DigitValue <= 9))
+            if (HasUnrecognisedDigits())
                 return false;
 
             var checksum = GetChecksum();
             return checksum == 0;
         }
 
-        public List<AccountNumber> GetAlternativeAccountNumbersForUnrecognised()
+        public bool HasUnrecognisedDigits()
+            => Number.Any(x => x.DigitValue == null);
+
+        public List<AccountNumber> GetAlternativeNumbersForUnrecognised()
         {
             var alternativeAccountNumbers = new List<AccountNumber>();
 
@@ -96,7 +107,7 @@ namespace BankOcrKata
             {
                 var digitOccurrences = numberAsText.Count(x => x.ToString() == digit.DigitValue.ToString());
                 var alternativeValues = digit.GetAlternativeValues();
-                foreach (var alternative in alternativeValues)
+                foreach (var newValue in alternativeValues)
                 {
                     var digitValueIndex = 0;
                     for (int i = 0; i < digitOccurrences; i++)
@@ -105,7 +116,7 @@ namespace BankOcrKata
 
                         var newAccountNumber = new AccountNumber(numberAsText
                         .Remove(digitValueIndex, 1)
-                        .Insert(digitValueIndex, alternative.ToString()));
+                        .Insert(digitValueIndex, newValue.ToString()));
 
                         if (newAccountNumber.HasValidChecksum() && !result.Any(x => x.Equals(newAccountNumber)))
                             result.Add(newAccountNumber);
@@ -126,15 +137,6 @@ namespace BankOcrKata
                 sum += Number[index++].DigitValue.Value * i;
 
             return sum % 11;
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (obj == null || !GetType().Equals(obj.GetType()))
-                return false;
-
-            var other = (AccountNumber)obj;
-            return ToString() == other.ToString();
         }
     }
 
