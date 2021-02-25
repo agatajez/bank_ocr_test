@@ -1,27 +1,57 @@
-﻿using System;
+﻿using BankOCR;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace BankOcrKata
 {
     public sealed class Digit
     {
-        public bool HasTopBar => DigitModel[0, 1] == 1;
-        public bool HasTopLeftBar => DigitModel[1, 0] == 1;
-        public bool HasTopRightBar => DigitModel[1, 2] == 1;
-        public bool HasMiddleBar => DigitModel[1, 1] == 1;
-        public bool HasBottomLeftBar => DigitModel[2, 0] == 1;
-        public bool HasBottomRightBar => DigitModel[2, 2] == 1;
-        public short? DigitValue { get; set; }
-        public short[,] DigitModel { get; set; }
+        public int? DigitValue { get; set; }
+        public List<Line> DigitModel { get; set; }
 
         public Digit()
         {
-            DigitModel = new short[,] { { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 } };
+            DigitModel = new List<Line>();
         }
 
         public Digit(char number) : base()
         {
-            DigitValue = short.Parse(number.ToString());
+            DigitModel = new List<Line>();
+            DigitValue = int.Parse(number.ToString());
+        }
+
+        public void TrySetValue()
+        {            
+            var possibleValues = DigitModelHelper.GetDigitsByBarsNumber(DigitModel.Count);
+            if (!possibleValues.Any())
+                return;
+
+            foreach (var value in possibleValues)
+            {
+                var model = DigitModelHelper.GetDigitModel(value);
+                if (DigitModelHelper.AreEqualModels(model, DigitModel))
+                {
+                    DigitValue = value;
+                    return;
+                }
+            }
+        }
+
+        public List<int> GetAlternativeValues()
+        {
+            var lines = DigitModel.Count;
+            var alternatives = DigitModelHelper.GetDigitsByBarsNumber(lines + 1);
+            alternatives.AddRange(DigitModelHelper.GetDigitsByBarsNumber(lines - 1));
+
+            var result = new List<int>();
+            foreach (var alternativeValue in alternatives)
+            {
+                var model = DigitModelHelper.GetDigitModel(alternativeValue);
+                if (DigitModelHelper.AreInterchangeableModels(model, DigitModel))
+                    result.Add(alternativeValue);
+            }
+            
+            return result;
         }
     }
 }

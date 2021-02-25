@@ -6,7 +6,7 @@ namespace BankOcrKata
     public class UserStory3
     {
         [TestCase(@"
- _  _  _  _  _  _  _  _     
+ _  _  _  _  _  _  _  _    
 | || || || || || || ||_   |
 |_||_||_||_||_||_||_| _|  |", "000000051")]
         [TestCase(@"

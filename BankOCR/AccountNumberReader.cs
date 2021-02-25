@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using BankOCR;
+using System.Collections.Generic;
 using System.IO;
 
 namespace BankOcrKata
@@ -6,129 +7,61 @@ namespace BankOcrKata
     public static class AccountNumberReader
     {
         private const int lineLength = 27;
+        private const int digitHeight = 3;
 
         public static List<AccountNumber> GetAccountNumbersFrom(string input)
         {
             var accounts = new List<AccountNumber>();
+            AccountNumber account = null;
             var reader = new StringReader(input);
             var line = string.Empty;
+            var lineIndex = 0;
             while (line != null)
             {
                 line = reader.ReadLine();
+
                 if (line == null)
                     continue;
 
-                var account = new AccountNumber();
-
-                line = reader.ReadLine();
-                ReadTopLine(line, account);
-
-                line = reader.ReadLine();
-                ReadMiddleLine(line, account);
-
-                line = reader.ReadLine();
-                ReadBottomLine(line, account);
-
-                accounts.Add(account);
+                if (line == string.Empty)
+                {
+                    account = new AccountNumber();
+                    lineIndex = 0;
+                    accounts.Add(account);
+                }
+                else if (line.Length != lineLength)
+                    throw new InvalidDataException($"Invalid line lenght ({line.Length}).");
+                else
+                    UpdateDigitModel(line, account, lineIndex++);
             }
 
             return accounts;
         }
 
-        private static void ReadTopLine(string topLine, AccountNumber account)
-        {
-            for (int i = 1; i < lineLength; i += 3)
-            {
-                var digit = new Digit();
-                account.Number.Add(digit);
-
-                if (!char.IsWhiteSpace(topLine[i]))
-                    digit.DigitModel[0, 1] = 1;
-            }
-        }
-
-        private static void ReadMiddleLine(string middleLine, AccountNumber account)
+        private static void UpdateDigitModel(string line, AccountNumber account, int index)
         {
             int digitIndex = 0;
             for (int i = 0; i < lineLength; i += 3)
             {
-                var digit = account.Number[digitIndex];
-                digitIndex++;
+                var digit = index == 0 ? new Digit() : account.Number[digitIndex++];
+                if (!account.Number.Contains(digit))
+                    account.Number.Add(digit);
 
-                if (!char.IsWhiteSpace(middleLine[i]))
-                    digit.DigitModel[1, 0] = 1;
+                if (index > 0 && !char.IsWhiteSpace(line[i]))
+                    digit.DigitModel.Add(new Line(index, 0));
 
-                if (!char.IsWhiteSpace(middleLine[i + 1]))
-                    digit.DigitModel[1, 1] = 1;
+                if (!char.IsWhiteSpace(line[i + 1]))
+                    digit.DigitModel.Add(new Line(index, 1));
 
-                if (!char.IsWhiteSpace(middleLine[i + 2]))
-                    digit.DigitModel[1, 2] = 1;
+                if (index > 0 && !char.IsWhiteSpace(line[i + 2]))
+                    digit.DigitModel.Add(new Line(index, 2));
 
-                if (!digit.HasTopBar)
-                {
-                    digit.DigitValue = (short)(digit.HasTopLeftBar ? 4 : 1);
-                    continue;
-                }
-
-                if (!digit.HasTopLeftBar && !digit.HasMiddleBar)
-                    digit.DigitValue = 7;
+                if (index == digitHeight - 1)
+                    digit.TrySetValue();
             }
+
         }
-
-        private static void ReadBottomLine(string bottomLine, AccountNumber account)
-        {
-            int digitIndex = 0;
-            for (int i = 0; i < lineLength; i += 3)
-            {
-                var digit = account.Number[digitIndex];
-                digitIndex++;
-
-                if (digit.DigitValue != null)
-                    continue;
-                if (!char.IsWhiteSpace(bottomLine[i]))
-                    digit.DigitModel[2, 0] = 1;
-
-                if (!char.IsWhiteSpace(bottomLine[i + 1]))
-                    digit.DigitModel[2, 1] = 1;
-
-                if (!char.IsWhiteSpace(bottomLine[i + 2]))
-                    digit.DigitModel[2, 2] = 1;
-
-                if (!digit.HasTopLeftBar)
-                {
-                    if (digit.HasMiddleBar)
-                    {
-                        if (digit.HasBottomLeftBar)
-                            digit.DigitValue = 2;
-                        else if (digit.HasTopRightBar)
-                            digit.DigitValue = 3;
-
-                        if (digit.DigitValue.HasValue)
-                            continue;
-                    }
-                }
-                else if (!digit.HasTopRightBar)
-                {
-                    digit.DigitValue = (short)(digit.HasBottomLeftBar ? 6 : 5);
-                    continue;
-                }
-                else
-                {
-                    if (digit.HasMiddleBar)
-                    {
-                        if (digit.HasBottomLeftBar)
-                            digit.DigitValue = 8;
-                        else if (digit.HasBottomRightBar)
-                            digit.DigitValue = 9;
-                    }
-                    else
-                        digit.DigitValue = 0;
-
-                    continue;
-                }
-
-            }
-        }
+                
     }
 
 }
